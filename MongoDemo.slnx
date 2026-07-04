@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/backend/" />
+  <Folder Name="/backend/src/">
+    <Project Path="backend/src/MongoDemo.Api/MongoDemo.Api.csproj" />
+  </Folder>
+  <Folder Name="/backend/tests/">
+    <Project Path="backend/tests/MongoDemo.Tests/MongoDemo.Tests.csproj" />
+  </Folder>
+</Solution>
