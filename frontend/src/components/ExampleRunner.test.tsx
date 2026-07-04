@@ -27,6 +27,8 @@ const catalog: ExampleInfo[] = [
   { id: "perf-pagination", concept: "Performance", title: "Paginação keyset", approach: "driver", route: "/api/performance/pagination" },
   { id: "model-embed", concept: "Modelagem", title: "Embedding vs Referencing", approach: "driver", route: "/api/modeling/embedding" },
   { id: "model-bulk", concept: "Modelagem", title: "Update atômico", approach: "driver", route: "/api/modeling/atomic-update" },
+  { id: "anti-unbounded", concept: "Anti-padrões", title: "Array ilimitado & 16MB", approach: "driver", route: "/api/antipatterns/unbounded-array" },
+  { id: "anti-subset", concept: "Anti-padrões", title: "Correção: Subset Pattern", approach: "driver", route: "/api/antipatterns/subset-pattern" },
   { id: "ef-linq", concept: "EF Core", title: "Consultas LINQ", approach: "ef-core", route: "/api/ef/linq" },
   { id: "ef-projection", concept: "EF Core", title: "Projeção com Select", approach: "ef-core", route: "/api/ef/projection" },
   { id: "ef-owned", concept: "EF Core", title: "Owned types", approach: "ef-core", route: "/api/ef/owned" },

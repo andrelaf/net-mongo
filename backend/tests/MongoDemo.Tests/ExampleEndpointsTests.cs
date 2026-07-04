@@ -59,6 +59,8 @@ public class ExampleEndpointsTests
         new object[] { "/api/performance/covered" },
         new object[] { "/api/performance/pagination" },
         new object[] { "/api/modeling/embedding" },
+        new object[] { "/api/antipatterns/unbounded-array" },
+        new object[] { "/api/antipatterns/subset-pattern" },
         new object[] { "/api/ef/filter" },
         new object[] { "/api/ef/aggregation" },
         new object[] { "/api/ef/linq" },

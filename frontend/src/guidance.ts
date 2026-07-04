@@ -88,6 +88,20 @@ export const conceptGuides: Record<string, ConceptGuide> = {
       "Snapshot: pedido congela preço/nome do produto no ato da compra.",
     ],
   },
+  "Anti-padrões": {
+    summary:
+      "Erros de modelagem que o MongoDB documenta oficialmente — e como corrigi-los. O mais comum é o array embutido ilimitado, que esbarra no limite rígido de 16MB por documento e degrada índices/leituras.",
+    whenToUse: [
+      "Sempre revise o schema contra estes anti-padrões antes de ir para produção.",
+      "Array cresce sem limite? Referencie e/ou use o Subset Pattern.",
+      "Documento muito grande / muitos campos? Divida ou use referência.",
+    ],
+    watchFor: [
+      "Limite rígido: 16MB por documento (BSON).",
+      "Outros anti-padrões: coleções demais, índices desnecessários (custam escrita/disco), documentos inchados e $lookup em excesso.",
+      "Padrões de correção: Subset (subconjunto quente embutido), Bucket e referência.",
+    ],
+  },
   "EF Core": {
     summary:
       "Provider oficial MongoDB para EF Core. LINQ familiar, change tracking e owned types para documentos embutidos. Traduz LINQ para pipelines de agregação.",

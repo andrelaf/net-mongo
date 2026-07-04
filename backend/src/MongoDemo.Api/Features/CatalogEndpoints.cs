@@ -41,6 +41,9 @@ public static class CatalogEndpoints
         new("model-embed", "Modelagem", "Embedding vs Referencing", "driver", "/api/modeling/embedding"),
         new("model-bulk", "Modelagem", "Update atômico ($inc/$push)", "driver", "/api/modeling/atomic-update"),
 
+        new("anti-unbounded", "Anti-padrões", "Array ilimitado & limite de 16MB", "driver", "/api/antipatterns/unbounded-array"),
+        new("anti-subset", "Anti-padrões", "Correção: Subset Pattern", "driver", "/api/antipatterns/subset-pattern"),
+
         new("ef-linq", "EF Core", "Consultas LINQ + AsNoTracking", "ef-core", "/api/ef/linq"),
         new("ef-owned", "EF Core", "Owned types (documentos embutidos)", "ef-core", "/api/ef/owned"),
     };

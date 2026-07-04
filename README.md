@@ -100,7 +100,14 @@ aponte com `VITE_API_URL` (ex.: crie um `.env` com `VITE_API_URL=http://localhos
 | **Agregação** | `$group` por categoria · `$unwind`+`$group` (top produtos) · `$bucket` (histograma) · `$lookup` (join) · `$facet` (dashboard) |
 | **Performance** | `explain()` COLLSCAN×IXSCAN · covered query (0 docs examinados) · paginação keyset vs `Skip` |
 | **Modelagem** | embedding vs referencing na prática · update atômico (`$push`+`$inc`) |
+| **Anti-padrões** | array embutido ilimitado + limite de 16MB (medido em BSON) · correção com **Subset Pattern** |
 | **EF Core** | LINQ · projeção com `Select` · owned types (embutidos) |
+
+> Cada conceito de **consulta** (CRUD, Filtros, Projeção, Agregação) tem os **dois casos**
+> lado a lado: **Driver** e **EF Core**. Performance e Modelagem são só-driver de propósito
+> (explain, operadores atômicos). A seção **Anti-padrões** cobre os erros de modelagem
+> documentados pelo MongoDB (arrays ilimitados, 16MB, coleções/índices em excesso,
+> `$lookup` demais) e os padrões de correção.
 
 ---
 

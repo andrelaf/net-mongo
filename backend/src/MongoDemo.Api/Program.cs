@@ -78,6 +78,7 @@ ProjectionEndpoints.Map(api);
 AggregationEndpoints.Map(api);
 PerformanceEndpoints.Map(api);
 ModelingEndpoints.Map(api);
+AntiPatternEndpoints.Map(api);
 EfCoreEndpoints.Map(api);
 
 // Cria índices e semeia dados no startup (best-effort: não derruba a app se o
