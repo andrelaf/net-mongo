@@ -109,6 +109,32 @@
 .run-btn:hover { background: var(--green-d); }
 .run-btn:disabled { opacity: 0.6; cursor: default; }
 
+/* ---------- História (explicação fácil dos anti-padrões) ---------- */
+.story {
+  background: linear-gradient(180deg, #1b2a1f 0%, #1a2331 100%);
+  border: 1px solid #2f6b45;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 16px 0;
+}
+.story-lead { margin: 0 0 12px; font-size: 14.5px; line-height: 1.55; }
+.story-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.story-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.story-card h4 { margin: 0 0 6px; font-size: 13px; }
+.story-card p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text); }
+.story-analogy { border-left: 3px solid #38bdf8; }
+.story-problem { border-left: 3px solid #f87171; }
+.story-fix { border-left: 3px solid #34d399; }
+
+@media (max-width: 900px) {
+  .story-grid { grid-template-columns: 1fr; }
+}
+
 .guide {
   background: var(--panel);
   border: 1px solid var(--border);

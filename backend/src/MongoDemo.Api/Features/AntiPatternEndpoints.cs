@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDemo.Api.Data;
@@ -126,6 +127,160 @@ public static class AntiPatternEndpoints
                     })).ToList();
                     return (json, json.Count);
                 }));
+
+        // ---- Anti-padrão nº 2: ÍNDICES DEMAIS / DESNECESSÁRIOS ----
+        g.MapGet("/too-many-indexes", async (MongoContext ctx, CommandCapture cap) =>
+        {
+            const string collName = "_ap_demo_indexes";
+            var coll = ctx.Database.GetCollection<BsonDocument>(collName);
+
+            return await EndpointHelpers.RunExample(cap, "Anti-padrões", "driver",
+                "ANTI-PADRÃO: criar índices 'por via das dúvidas'. Todo índice acelera a " +
+                "LEITURA, mas é atualizado em TODA escrita e ocupa disco/RAM. Aqui inserimos " +
+                "o mesmo lote de documentos duas vezes: primeiro com só o índice padrão (_id) " +
+                "e depois com 5 índices extras. Compare o tempo de inserção — os índices a mais " +
+                "tornam a escrita mais lenta sem nenhum benefício se você não consulta aqueles " +
+                "campos. CORREÇÃO: só crie índices para os filtros/ordenções que você realmente usa.",
+                """
+                // Aquece (cria a coleção; não cronometramos essa parte):
+                await coll.InsertManyAsync(BuildDocs(1000));
+
+                // 1) Insere 8.000 docs com apenas o índice padrão (_id):
+                var sw1 = Stopwatch.StartNew();
+                await coll.InsertManyAsync(BuildDocs(8000));
+                sw1.Stop();
+
+                // 2) Cria 15 índices extras e insere outros 8.000 docs:
+                for (int f = 0; f < 15; f++)
+                    await coll.Indexes.CreateOneAsync(
+                        new CreateIndexModel<BsonDocument>(Builders<BsonDocument>.IndexKeys.Ascending($"f{f}")));
+
+                var sw2 = Stopwatch.StartNew();
+                await coll.InsertManyAsync(BuildDocs(8000));
+                sw2.Stop();
+                // sw2 > sw1: manter 15 índices custa em CADA escrita.
+                """,
+                async () =>
+                {
+                    const int batch = 8000;
+                    await ctx.Database.DropCollectionAsync(collName); // idempotente
+                    await coll.InsertManyAsync(BuildDocs(1000));      // warmup (cria coleção; não cronometrado)
+
+                    var sw1 = Stopwatch.StartNew();
+                    await coll.InsertManyAsync(BuildDocs(batch));
+                    sw1.Stop();
+
+                    for (int f = 0; f < 15; f++)
+                        await coll.Indexes.CreateOneAsync(
+                            new CreateIndexModel<BsonDocument>(Builders<BsonDocument>.IndexKeys.Ascending($"f{f}")));
+
+                    var sw2 = Stopwatch.StartNew();
+                    await coll.InsertManyAsync(BuildDocs(batch));
+                    sw2.Stop();
+
+                    var stats = await ctx.Database.RunCommandAsync<BsonDocument>(
+                        new BsonDocument { { "collStats", collName } });
+                    int nindexes = stats.GetValue("nindexes", 0).ToInt32();
+                    long indexSize = stats.GetValue("totalIndexSize", 0).ToInt64();
+
+                    await ctx.Database.DropCollectionAsync(collName); // limpeza
+
+                    var slowdown = sw1.ElapsedMilliseconds > 0
+                        ? Math.Round((double)sw2.ElapsedMilliseconds / sw1.ElapsedMilliseconds, 2)
+                        : 0;
+
+                    var result = new
+                    {
+                        withDefaultIndexOnly = new { docs = batch, insertMs = sw1.ElapsedMilliseconds, indexes = 1 },
+                        withFifteenExtraIndexes = new { docs = batch, insertMs = sw2.ElapsedMilliseconds, indexes = nindexes, indexSize = Human(indexSize) },
+                        writeSlowdownFactor = slowdown,
+                        verdict = slowdown > 1
+                            ? $"Com 15 índices a escrita ficou ~{slowdown}x mais lenta (mesmos {batch} docs)."
+                            : $"Escrita comparável nesta amostra, mas os índices ocuparam {Human(indexSize)} extras e são mantidos em toda gravação.",
+                        fix = "Indexe só o que você consulta. Remova índices não usados ($indexStats ajuda a achá-los)."
+                    };
+                    return (result, 2);
+                });
+        });
+
+        // ---- Anti-padrão nº 3: muitos documentos minúsculos -> BUCKET PATTERN ----
+        g.MapGet("/bucket-pattern", (CommandCapture cap) =>
+            EndpointHelpers.RunExample(cap, "Anti-padrões", "driver",
+                "ANTI-PADRÃO em séries temporais/IoT: um documento por leitura gera MILHÕES " +
+                "de docs minúsculos — muito overhead de índice e de _id. CORREÇÃO: BUCKET " +
+                "PATTERN — agrupar as leituras de uma janela (ex.: 1 hora) em UM documento com " +
+                "um array de medições + agregados (min/máx/média) já calculados. Aqui pegamos " +
+                "240 leituras de um sensor (uma a cada 6 min por 24h) e agrupamos por hora: " +
+                "de 240 documentos para 24 buckets — 10x menos documentos.",
+                """
+                // ANTES (anti-padrão): 240 leituras = 240 documentos minúsculos.
+                var readings = GenerateReadings(240);
+
+                // DEPOIS (Bucket Pattern): agrupa por hora em 1 doc por janela.
+                var buckets = readings
+                    .GroupBy(r => new DateTime(r.ts.Year, r.ts.Month, r.ts.Day, r.ts.Hour, 0, 0))
+                    .Select(h => new {
+                        sensor = "sensor-1",
+                        hour = h.Key,
+                        count = h.Count(),
+                        min = h.Min(x => x.value),
+                        max = h.Max(x => x.value),
+                        avg = Math.Round(h.Average(x => x.value), 2),
+                        measurements = h.Select(x => new { x.ts, x.value })   // array embutido (LIMITADO: 1h)
+                    });
+                """,
+                () =>
+                {
+                    var readings = GenerateReadings(240);
+                    var buckets = readings
+                        .GroupBy(r => new DateTime(r.ts.Year, r.ts.Month, r.ts.Day, r.ts.Hour, 0, 0, DateTimeKind.Utc))
+                        .Select(h => new
+                        {
+                            sensor = "sensor-1",
+                            hour = h.Key,
+                            count = h.Count(),
+                            min = h.Min(x => x.value),
+                            max = h.Max(x => x.value),
+                            avg = Math.Round(h.Average(x => x.value), 2),
+                            measurements = h.Select(x => new { x.ts, x.value }).ToList()
+                        })
+                        .OrderBy(b => b.hour)
+                        .ToList();
+
+                    var result = new
+                    {
+                        antiPattern = new { style = "1 documento por leitura", documents = readings.Count },
+                        bucketPattern = new { style = "1 documento por hora (bucket)", documents = buckets.Count },
+                        reduction = $"{readings.Count} -> {buckets.Count} documentos ({readings.Count / buckets.Count}x menos)",
+                        sampleBucket = buckets[0],
+                        note = "O array do bucket é LIMITADO (no máx. as leituras de 1 hora) — não vira array ilimitado."
+                    };
+                    return Task.FromResult<(object, int)>((result, buckets.Count));
+                }));
+    }
+
+    private static List<BsonDocument> BuildDocs(int n)
+    {
+        var rng = new Random(42);
+        var list = new List<BsonDocument>(n);
+        for (int i = 0; i < n; i++)
+        {
+            var doc = new BsonDocument();
+            for (int f = 0; f < 15; f++)
+                doc.Add($"f{f}", rng.Next(0, 1_000_000));
+            list.Add(doc);
+        }
+        return list;
+    }
+
+    private static List<(DateTime ts, double value)> GenerateReadings(int n)
+    {
+        var rng = new Random(7);
+        var start = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var list = new List<(DateTime, double)>(n);
+        for (int i = 0; i < n; i++)
+            list.Add((start.AddMinutes(i * 6), Math.Round(20 + rng.NextDouble() * 10, 2)));
+        return list;
     }
 
     // Documento propositalmente mal modelado para o exemplo de array ilimitado.

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ExampleInfo, ExampleResult } from "../api";
 import { methodFor, runExample as defaultRun } from "../api";
 import { conceptGuides } from "../guidance";
+import { exampleStories } from "../stories";
 import { CodeBlock } from "./CodeBlock";
 
 interface Props {
@@ -19,6 +20,7 @@ export function ExampleRunner({ example, run = defaultRun }: Props) {
   const [tab, setTab] = useState<Tab>("resultado");
 
   const guide = conceptGuides[example.concept];
+  const story = exampleStories[example.id];
   const method = methodFor(example.route);
 
   async function handleRun() {
@@ -51,6 +53,26 @@ export function ExampleRunner({ example, run = defaultRun }: Props) {
           {loading ? "Executando…" : method === "POST" ? "Executar (escreve)" : "Executar"}
         </button>
       </header>
+
+      {story && (
+        <div className="story" data-testid="story">
+          <p className="story-lead">🧠 <strong>Em palavras simples:</strong> {story.emPalavrasSimples}</p>
+          <div className="story-grid">
+            <div className="story-card story-analogy">
+              <h4>🔎 Analogia</h4>
+              <p>{story.analogia}</p>
+            </div>
+            <div className="story-card story-problem">
+              <h4>❌ O problema</h4>
+              <p>{story.oProblema}</p>
+            </div>
+            <div className="story-card story-fix">
+              <h4>✅ A correção</h4>
+              <p>{story.aCorrecao}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {guide && (
         <div className="guide">

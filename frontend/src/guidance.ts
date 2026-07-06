@@ -90,16 +90,20 @@ export const conceptGuides: Record<string, ConceptGuide> = {
   },
   "Anti-padrões": {
     summary:
-      "Erros de modelagem que o MongoDB documenta oficialmente — e como corrigi-los. O mais comum é o array embutido ilimitado, que esbarra no limite rígido de 16MB por documento e degrada índices/leituras.",
+      "Os 6 anti-padrões de modelagem que o MongoDB documenta oficialmente — e como corrigi-los. Passe o mouse pelos exemplos: cada página explica o caso em linguagem simples, com analogia do dia a dia.",
     whenToUse: [
-      "Sempre revise o schema contra estes anti-padrões antes de ir para produção.",
+      "Revise seu schema contra esta lista antes de ir para produção.",
       "Array cresce sem limite? Referencie e/ou use o Subset Pattern.",
-      "Documento muito grande / muitos campos? Divida ou use referência.",
+      "Muitas leituras minúsculas (IoT/logs)? Use o Bucket Pattern.",
     ],
     watchFor: [
-      "Limite rígido: 16MB por documento (BSON).",
-      "Outros anti-padrões: coleções demais, índices desnecessários (custam escrita/disco), documentos inchados e $lookup em excesso.",
-      "Padrões de correção: Subset (subconjunto quente embutido), Bucket e referência.",
+      "1) Arrays maciços (ilimitados) — teto rígido de 16MB por documento.",
+      "2) Número enorme de coleções — degrada o storage engine.",
+      "3) Índices desnecessários — custam escrita e disco.",
+      "4) Documentos inchados — pioram cache e I/O.",
+      "5) Separar dados acessados juntos — força joins/$lookup evitáveis.",
+      "6) Buscas sem diferenciar maiúsc./minúsc. sem índice apropriado (collation).",
+      "Correções: Subset, Bucket, referência e collation. Ref.: mongodb.com/docs → design-antipatterns.",
     ],
   },
   "EF Core": {

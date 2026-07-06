@@ -61,6 +61,8 @@ public class ExampleEndpointsTests
         new object[] { "/api/modeling/embedding" },
         new object[] { "/api/antipatterns/unbounded-array" },
         new object[] { "/api/antipatterns/subset-pattern" },
+        new object[] { "/api/antipatterns/too-many-indexes" },
+        new object[] { "/api/antipatterns/bucket-pattern" },
         new object[] { "/api/ef/filter" },
         new object[] { "/api/ef/aggregation" },
         new object[] { "/api/ef/linq" },

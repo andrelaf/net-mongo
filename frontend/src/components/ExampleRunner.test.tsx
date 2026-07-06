@@ -29,6 +29,8 @@ const catalog: ExampleInfo[] = [
   { id: "model-bulk", concept: "Modelagem", title: "Update atômico", approach: "driver", route: "/api/modeling/atomic-update" },
   { id: "anti-unbounded", concept: "Anti-padrões", title: "Array ilimitado & 16MB", approach: "driver", route: "/api/antipatterns/unbounded-array" },
   { id: "anti-subset", concept: "Anti-padrões", title: "Correção: Subset Pattern", approach: "driver", route: "/api/antipatterns/subset-pattern" },
+  { id: "anti-indexes", concept: "Anti-padrões", title: "Índices desnecessários", approach: "driver", route: "/api/antipatterns/too-many-indexes" },
+  { id: "anti-bucket", concept: "Anti-padrões", title: "Bucket Pattern", approach: "driver", route: "/api/antipatterns/bucket-pattern" },
   { id: "ef-linq", concept: "EF Core", title: "Consultas LINQ", approach: "ef-core", route: "/api/ef/linq" },
   { id: "ef-projection", concept: "EF Core", title: "Projeção com Select", approach: "ef-core", route: "/api/ef/projection" },
   { id: "ef-owned", concept: "EF Core", title: "Owned types", approach: "ef-core", route: "/api/ef/owned" },
@@ -99,6 +101,23 @@ describe("ExampleRunner — comportamento", () => {
 
     await user.click(screen.getByRole("tab", { name: "Código C#" }));
     expect(screen.getByText(/collection.Find/)).toBeInTheDocument();
+  });
+
+  it("mostra o card de explicação fácil (analogia/problema/correção) nos anti-padrões", () => {
+    const ex = catalog.find((e) => e.id === "anti-unbounded")!;
+    render(<ExampleRunner example={ex} run={vi.fn()} />);
+
+    const story = screen.getByTestId("story");
+    expect(story).toHaveTextContent("Em palavras simples");
+    expect(story).toHaveTextContent("Analogia");
+    expect(story).toHaveTextContent("O problema");
+    expect(story).toHaveTextContent("A correção");
+  });
+
+  it("NÃO mostra o card de história em exemplos que não são anti-padrão", () => {
+    const ex = catalog.find((e) => e.id === "filter-builder")!;
+    render(<ExampleRunner example={ex} run={vi.fn()} />);
+    expect(screen.queryByTestId("story")).not.toBeInTheDocument();
   });
 
   it("rotula exemplos POST como operação de escrita", () => {

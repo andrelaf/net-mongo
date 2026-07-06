@@ -43,6 +43,8 @@ public static class CatalogEndpoints
 
         new("anti-unbounded", "Anti-padrões", "Array ilimitado & limite de 16MB", "driver", "/api/antipatterns/unbounded-array"),
         new("anti-subset", "Anti-padrões", "Correção: Subset Pattern", "driver", "/api/antipatterns/subset-pattern"),
+        new("anti-indexes", "Anti-padrões", "Índices desnecessários (custo de escrita)", "driver", "/api/antipatterns/too-many-indexes"),
+        new("anti-bucket", "Anti-padrões", "Correção: Bucket Pattern (séries temporais)", "driver", "/api/antipatterns/bucket-pattern"),
 
         new("ef-linq", "EF Core", "Consultas LINQ + AsNoTracking", "ef-core", "/api/ef/linq"),
         new("ef-owned", "EF Core", "Owned types (documentos embutidos)", "ef-core", "/api/ef/owned"),
